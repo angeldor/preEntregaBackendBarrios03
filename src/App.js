@@ -7,6 +7,7 @@ import MongoStore from "connect-mongo"
 import router from './Routes/Router.js'
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
+import passport from './passport.config.js'
 
 const app = express()
 const httpServer = app.listen(8080, () => console.log('Server running on port 8080'))
@@ -31,18 +32,29 @@ app.use(session({
     saveUninitialized: true
 }))
 
+app.use(passport.initialize())
+app.use(passport.session())
+
 app.use(express.static(__dirname + '/public'))
 app.use(express.json())
 
 app.use('/', router)
 
+// app.use((req, res, next) => {
+//     const { user } = req.session
+//     const path = req.path
+//     if (!user && path !== '/login') {
+//         return res.redirect('/login')
+//     }
+//     next()
+// })
+
 app.use((req, res, next) => {
-    const { user } = req.session
-    const path = req.path
-    if (!user && path !== '/login') {
-        return res.redirect('/login')
+    if (!req.isAuthenticated() && req.originalUrl !== '/login') {
+        res.redirect('/login')
+    } else {
+        next()
     }
-    next()
 })
 
 app.engine('handlebars', handlebars.engine())

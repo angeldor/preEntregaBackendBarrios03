@@ -5,6 +5,7 @@ import { productModel } from '../DAO/models/product.model.js'
 // import { cartModel } from '../DAO/models/cart.model.js'
 // import { userModel } from '../DAO/models/user.model.js'
 import UsersDAO from '../DAO/DB/userManager.js'
+import passport from '../passport.config.js'
 
 const router = express.Router()
 
@@ -17,6 +18,14 @@ mongoose.connection.on("error", err => {
 
 router.get("/ping", (req, res) => {
     res.send("pong")
+})
+
+router.get('/api/sessions/current', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.json({ user: req.user })
+    } else {
+        res.json({ user: null })
+    }
 })
 // vistas
 router.get('/', (req, res) => {
