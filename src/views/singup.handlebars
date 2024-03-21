@@ -1,0 +1,40 @@
+{{!< layouts/main}} <div class="login">
+    <form action="singup" method="post" class="login__form">
+        <h1 class="login__title">Registro</h1>
+        <div class="login__content">
+            <div class="login__box">
+                <div class="login__box-input">
+                    <input type="text" required class="login__input" name="first_name">
+                    <label for="login-email" class="login__label">Nombre</label>
+                </div>
+            </div>
+            <div class="login__box">
+                <div class="login__box-input">
+                    <input type="text" required class="login__input" name="last_name">
+                    <label for="login-email" class="login__label">Apellido</label>
+                </div>
+            </div>
+            <div class="login__box">
+                <div class="login__box-input">
+                    <input type="number" required class="login__input" name="age">
+                    <label for="login-email" class="login__label">Edad</label>
+                </div>
+            </div>
+            <div class="login__box">
+                <div class="login__box-input">
+                    <input type="text" required class="login__input" name="email">
+                    <label for="login-email" class="login__label">Email</label>
+                </div>
+            </div>
+            <div class="login__box">
+                <div class="login__box-input">
+                    <input type="password" required class="login__input" name="password">
+                    <label for="login-email" class="login__label">Password</label>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="login__button">Registrarse</button>
+        <p>¿Ya tienes una cuenta? <a href="login">Inicia sesión</a></p>
+        <p><a href="/home">Volver al inicio</a></p>
+    </form>
+    </div>

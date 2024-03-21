@@ -1,0 +1,59 @@
+{{!< layouts/main}} <div class="titulo">
+    <h1>Lista de productos</h1>
+    </div>
+
+    {{!-- <div class="productList">
+        {{#each productData}}
+        <div class="productCard">
+            <div class="header">
+                <img src="{{this.image}}" alt="Foto producto">
+            </div>
+            <div class="info">
+                <h2 class="title">{{this.title}}</h2>
+                <p>{{this.description}}</p>
+                <p></p>
+                <p class="precio">Precio: ${{this.price}}</p>
+            </div>
+            <div class="footer">
+
+                <button class="button">Más info</button>
+                <button class="button">Agregar al carrito</button>
+            </div>
+        </div>
+        {{/each}}
+    </div> --}}
+
+    <section>
+        {{#each productData}}
+        <div class="product-card spacing">
+            <div class="badge">New Product</div>
+            <div class="product-thumb">
+                <img src="{{this.image}}" alt="Product image">
+            </div>
+            <div class="product-details">
+                <span class="product-category">{{this.category}}</span>
+                <h4><a href="#">{{this.title}}</a></h4>
+                <p>{{this.description}}</p>
+                <div class="product-bottom-details">
+                    <div class="product-price">$ {{this.price}}</div>
+                    <div class="product-links">
+                        <a href="#"><i class="fa-solid fa-info"></i></a>
+                        <a href="#"><i class="fa fa-shopping-cart"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </section>
+
+    <div class="navegacion">
+        <ul>
+            {{#if hasPrevPage}}
+            <li><a class="button" href="?page={{prevPage}}">Anterior</a></li>
+            {{/if}}
+
+            {{#if hasNextPage}}
+            <li><a class="button" href="?page={{nextPage}}">Siguiente</a></li>
+            {{/if}}
+        </ul>
+    </div>

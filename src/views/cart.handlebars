@@ -1,0 +1,23 @@
+{{!< layouts/main}} <div class="titulo">
+    <h1>Detalle del carrito</h1>
+    </div>
+
+    <div class="productList">
+        {{#each formattedProducts}}
+        <div class="productCard">
+            <div class="header"></div>
+            <div class="info">
+                <h3 class="title">{{this.title}}</h3>
+                <p>{{this.description}}</p>
+            </div>
+            <div class="footer">
+                <p>Precio: </p>
+                <p class="precio">{{this.price}}</p>
+                <button class="button">Más info</button>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    <div class="total">
+        <h1>Total del carrito: $ {{cartTotal}}</h1>
+    </div>
