@@ -1,395 +1,384 @@
-import express from 'express'
-import { ProductManager, CartManager } from '../DAO/DB/ProductManager.js'
-import mongoose from 'mongoose'
-import { productModel } from '../DAO/models/product.model.js'
+import express from "express";
+import { ProductManager, CartManager } from "../DAO/DB/ProductManager.js";
+import mongoose from "mongoose";
+import { productModel } from "../DAO/models/product.model.js";
 // import { cartModel } from '../DAO/models/cart.model.js'
 // import { userModel } from '../DAO/models/user.model.js'
-import UsersDAO from '../DAO/DB/userManager.js'
-import passport from '../passport.config.js'
+import UsersDAO from "../DAO/DB/userManager.js";
+import passport from "../passport.config.js";
 
-const router = express.Router()
+const router = express.Router();
 
-const productManager = new ProductManager()
-const cartManager = new CartManager()
+const productManager = new ProductManager();
+const cartManager = new CartManager();
 
-mongoose.connection.on("error", err => {
-    console.error("Error al conectarse a Mongo", + err)
-})
+mongoose.connection.on("error", (err) => {
+  console.error("Error al conectarse a Mongo", +err);
+});
 
 router.get("/ping", (req, res) => {
-    res.send("pong")
-})
+  res.send("pong");
+});
 
-router.get('/api/sessions/current', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.json({ user: req.user })
-    } else {
-        res.json({ user: null })
-    }
-})
+router.get("/api/sessions/current", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({ user: req.user });
+  } else {
+    res.json({ user: null });
+  }
+});
 // vistas
-router.get('/', (req, res) => {
-    res.redirect('/home')
-})
+router.get("/", (req, res) => {
+  res.redirect("/home");
+});
 
-router.get('/home', (req, res) => {
-
-    if (req.session.user) {
-        res.redirect("/profile")
-    } else {
-        res.render("home")
-    }
-
-})
+router.get("/home", (req, res) => {
+  if (req.session.user) {
+    res.redirect("/profile");
+  } else {
+    res.render("home");
+  }
+});
 
 router.get("/singup", (req, res) => {
-    res.render('singup')
-})
+  res.render("singup");
+});
 
 router.get("/login", (req, res) => {
-
-    if (req.session.user) {
-        res.redirect("/profile")
-    } else {
-        res.render("login")
-    }
-
-})
+  if (req.session.user) {
+    res.redirect("/profile");
+  } else {
+    res.render("login");
+  }
+});
 
 router.get("/profile", async (req, res) => {
-    if (req.session.user) {
-
-        let user = await UsersDAO.getUserByID(req.session.user)
-        res.render("profile", { user })
-
-    } else {
-        res.redirect("/login")
-    }
-})
+  if (req.session.user) {
+    let user = await UsersDAO.getUserByID(req.session.user);
+    res.render("profile", { user });
+  } else {
+    res.redirect("/login");
+  }
+});
 
 // sesiones
 
 router.post("/singup", async (req, res) => {
+  let first_name = req.body.first_name;
+  let last_name = req.body.last_name;
+  let email = req.body.email;
+  let age = parseInt(req.body.age);
+  let password = req.body.password;
 
-    let first_name = req.body.first_name
-    let last_name = req.body.last_name
-    let email = req.body.email
-    let age = parseInt(req.body.age)
-    let password = req.body.password
+  if (!first_name || !last_name || !email || !age || !password) {
+    res.redirect("/singup");
+  }
 
-    if (!first_name || !last_name || !email || !age || !password) {
-        res.redirect("/singup")
-    }
+  let emailUsed = await UsersDAO.getUserByEmail(email);
 
-    let emailUsed = await UsersDAO.getUserByEmail(email)
-
-    if (emailUsed) {
-        res.redirect("/singup")
-    } else {
-        await UsersDAO.insert(first_name, last_name, age, email, password)
-        res.redirect("/login")
-    }
-
-})
+  if (emailUsed) {
+    res.redirect("/singup");
+  } else {
+    await UsersDAO.insert(first_name, last_name, age, email, password);
+    res.redirect("/login");
+  }
+});
 
 router.post("/login", async (req, res) => {
+  let email = req.body.email;
+  let password = req.body.password;
 
-    let email = req.body.email
-    let password = req.body.password
+  if (!email || !password) {
+    res.redirect("/login");
+  }
 
-    if (!email || !password) {
-        res.redirect("/login")
-    }
+  let user = await UsersDAO.getUserByCreds(email, password);
 
-    let user = await UsersDAO.getUserByCreds(email, password)
-
-    if (!user) {
-        res.redirect("/login")
-    } else {
-        req.session.user = user._id
-        res.redirect("/profile")
-    }
-
-})
+  if (!user) {
+    res.redirect("/login");
+  } else {
+    req.session.user = user._id;
+    res.redirect("/profile");
+  }
+});
 
 router.get("/logout", (req, res) => {
-    req.session.destroy((err) => {
-        res.redirect("/home")
-    })
-})
+  req.session.destroy((err) => {
+    res.redirect("/home");
+  });
+});
 
 // ProductManager
 
 router.post("/products", async (req, res) => {
-    try {
-        const {
-            title,
-            description,
-            price,
-            image,
-            code,
-            stock,
-            category,
-            thumbnails,
-        } = req.body
-
-        const newProduct = await productManager.addProduct({
-            title,
-            description,
-            price,
-            image,
-            code,
-            stock,
-            category,
-            thumbnails,
-        })
-
-        res.status(201).send(newProduct)
-    } catch (error) {
-        res.status(400).send(`Error: ${error.message}`)
+  try {
+    const {
+      title,
+      description,
+      price,
+      image,
+      code,
+      stock,
+      category,
+      thumbnails,
+    } = req.body;
+    if (!req.session.user || req.session.user.role !== "administrador") {
+      return res.status(403).send("Acceso no autorizado");
     }
+    const newProduct = await productManager.addProduct({
+      title,
+      description,
+      price,
+      image,
+      code,
+      stock,
+      category,
+      thumbnails,
+    });
 
-})
+    res.status(201).send(newProduct);
+  } catch (error) {
+    res.status(400).send(`Error: ${error.message}`);
+  }
+});
 
 router.put("/products/:id", async (req, res) => {
-    const productId = req.params.id
-    const updatedFields = req.body
+  const productId = req.params.id;
+  const updatedFields = req.body;
 
-    try {
-        const updatedProduct = await productManager.updateProduct(productId, updatedFields)
-        res.send(updatedProduct)
-    } catch (error) {
-        res.status(404).send(`Error 404: ${error.message}`)
+  try {
+    if (!req.session.user || req.session.user.role !== "administrador") {
+      return res.status(403).send("Acceso no autorizado");
     }
-})
+    const updatedProduct = await productManager.updateProduct(
+      productId,
+      updatedFields
+    );
+    if (updatedProduct) {
+      res.send(updatedProduct);
+    } else {
+      res.status(404).send(`Error 404: Producto no encontrado`);
+    }
+  } catch (error) {
+    res.status(500).send(`Error: ${error.message}`);
+  }
+});
 
 router.delete("/products/:id", async (req, res) => {
-    const productId = req.params.id
+  const productId = req.params.id;
 
-    try {
-        await productManager.deleteProduct(productId)
-        res.send(`Product with ID ${productId} deleted successfully.`)
-    } catch (error) {
-        res.status(404).send(error.message)
+  try {
+    if (!req.session.user || req.session.user.role !== "administrador") {
+      return res.status(403).send("Acceso no autorizado");
     }
-})
-// Crear una vista en el router de views ‘/products’ 
+    await productManager.deleteProduct(productId);
+    res.send(`Producto con ID ${productId} eliminado exitosamente.`);
+  } catch (error) {
+    res.status(404).send(`Error 404: ${error.message}`);
+  }
+});
+// Crear una vista en el router de views ‘/products’
 // para visualizar todos los productos con su respectiva paginación.
-router.get("/products.html", async (req, res) => {
-    try {
-
-        if (!req.session.user) {
-            return res.redirect('/login')
-        }
-
-        const { limit = 10, page = 1, sort, query } = req.query
-
-        const options = {
-            limit: parseInt(limit, 10),
-            page: parseInt(page, 10),
-            sort: sort ? { price: sort === 'asc' ? 1 : -1 } : null
-        }
-
-        const categoryFilter = query ? { category: { $regex: new RegExp(query, 'i') } } : {}
-
-        const { docs: products, totalPages, page: currentPage, hasNextPage, hasPrevPage } = await productModel.paginate(categoryFilter, options)
-
-        let prevPage = currentPage > 1 ? currentPage - 1 : null
-        let nextPage = currentPage < totalPages ? currentPage + 1 : null
-
-        if (currentPage < 1 || currentPage > totalPages) {
-            return res.status(404).send("Error 404: Página no encontrada")
-        }
-
-        let formattedProducts = products.map(product => {
-            return {
-                title: product.title,
-                description: product.description,
-                price: product.price,
-                image: product.image,
-                category: product.category,
-            }
-        })
-
-        res.render('product', { productData: formattedProducts, totalPages, currentPage, hasNextPage, hasPrevPage, prevPage, nextPage })
-    } catch (error) {
-        res.status(500).json({ message: error.message })
+router.get("/products", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect("/login");
     }
-})
-//El método GET deberá devolver un objeto con el siguiente formato:
-// {
-// 	status:success/error
-// payload: Resultado de los productos solicitados
-// totalPages: Total de páginas
-// prevPage: Página anterior
-// nextPage: Página siguiente
-// page: Página actual
-// hasPrevPage: Indicador para saber si la página previa existe
-// hasNextPage: Indicador para saber si la página siguiente existe.
-// prevLink: Link directo a la página previa (null si hasPrevPage=false)
-// nextLink: Link directo a la página siguiente (null si hasNextPage=false)
-// }
-router.get("/products.json", async (req, res) => {
-    try {
-        const { limit = 10, page = 1, sort, query } = req.query
 
-        const options = {
-            limit: parseInt(limit, 10),
-            page: parseInt(page, 10),
-            sort: sort ? { price: sort === 'asc' ? 1 : -1 } : null
-        }
+    const { limit = 10, page = 1, sort, query } = req.query;
 
-        const categoryFilter = query ? { category: { $regex: new RegExp(query, 'i') } } : {}
+    const options = {
+      limit: parseInt(limit, 10),
+      page: parseInt(page, 10),
+      sort: sort ? { price: sort === "asc" ? 1 : -1 } : null,
+    };
 
-        const { docs: products, totalPages, page: currentPage, hasNextPage, hasPrevPage } = await productModel.paginate(categoryFilter, options)
+    const categoryFilter = query
+      ? { category: { $regex: new RegExp(query, "i") } }
+      : {};
 
-        let formattedProducts = products.map(product => {
-            return {
-                title: product.title,
-                description: product.description,
-                price: product.price,
-                image: product.image
-            }
-        })
+    const {
+      docs: products,
+      totalPages,
+      page: currentPage,
+      hasNextPage,
+      hasPrevPage,
+    } = await productModel.paginate(categoryFilter, options);
 
-        res.status(200).json({
-            status: 'success',
-            payload: formattedProducts,
-            totalPages,
-            page: currentPage,
-            hasNextPage,
-            hasPrevPage
-        })
-    } catch (error) {
-        res.status(500).json({ message: error.message })
+    let prevPage = currentPage > 1 ? currentPage - 1 : null;
+    let nextPage = currentPage < totalPages ? currentPage + 1 : null;
+
+    if (currentPage < 1 || currentPage > totalPages) {
+      return res.status(404).send("Error 404: Página no encontrada");
     }
-})
+
+    let formattedProducts = products.map((product) => {
+      return {
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        image: product.image,
+        category: product.category,
+      };
+    });
+
+    res.render("product", {
+      productData: formattedProducts,
+      totalPages,
+      currentPage,
+      hasNextPage,
+      hasPrevPage,
+      prevPage,
+      nextPage,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 router.get("/products/:id", async (req, res) => {
-    const productId = req.params.id
+  const productId = req.params.id;
 
-    try {
-        const product = await productManager.getProductById(productId);
+  try {
+    const product = await productManager.getProductById(productId);
 
-        if (product) {
-            res.send(product);
-        } else {
-            res.status(404).send("Error 404: Product not found");
-        }
-    } catch (error) {
-        res.status(500).send(`Error: ${error.message}`);
+    if (product) {
+      res.send(product);
+    } else {
+      res.status(404).send("Error 404: Product not found");
     }
-})
+  } catch (error) {
+    res.status(500).send(`Error: ${error.message}`);
+  }
+});
 
 router.get("/api/carts", async (req, res) => {
-    try {
-        let carts = await cartManager.getAllCarts();
-
-        const limit = req.query.limit;
-
-        if (limit) {
-            carts = carts.slice(0, parseInt(limit, 10));
-        }
-
-        res.send(carts);
-    } catch (error) {
-        res.status(500).send(`Error: ${error.message}`);
+  try {
+    if (!req.session.user || req.session.user.role !== "administrador") {
+      return res.status(403).send("Acceso no autorizado");
     }
-})
+    let carts = await cartManager.getAllCarts();
+
+    const limit = req.query.limit;
+
+    if (limit) {
+      carts = carts.slice(0, parseInt(limit, 10));
+    }
+
+    res.send(carts);
+  } catch (error) {
+    res.status(500).send(`Error: ${error.message}`);
+  }
+});
 
 router.post("/api/carts", async (req, res) => {
-    try {
-        const newCartId = await cartManager.createCart()
-        res.status(201).send({ id: newCartId, items: [], total: 0 })
-    } catch (error) {
-        res.status(500).send(`Error: ${error.message}`)
+  try {
+    if (req.session.user && req.session.user.role === "administrador") {
+      return res.status(403).send("Acceso no autorizado para administradores");
     }
-})
-// Además, agregar una vista en ‘/carts/:cid (cartId) 
-// para visualizar un carrito específico, 
-// donde se deberán listar SOLO los productos que pertenezcan a dicho carrito.
+    const newCartId = await cartManager.createCart();
+    res.status(201).send({ id: newCartId, items: [], total: 0 });
+  } catch (error) {
+    res.status(500).send(`Error: ${error.message}`);
+  }
+});
+
 router.get("/api/carts/:cid", async (req, res) => {
-    const cartId = req.params.cid
+  const cartId = req.params.cid;
 
-    try {
-        const cart = await cartManager.getCart(cartId)
+  try {
+    const cart = await cartManager.getCart(cartId);
 
-        if (cart) {
-            const productsDetails = []
+    if (cart) {
+      const productsDetails = [];
 
-            for (const item of cart.items) {
-                const product = await productManager.getProductById(item.productId)
-                if (product) {
-                    productsDetails.push({ product, quantity: item.quantity })
-                }
-            }
-            let formattedProducts = productsDetails.map(item => {
-                return {
-                    title: item.product.title,
-                    description: item.product.description,
-                    price: item.product.price
-                }
-            })
-            let cartTotal = cart.total
-            res.render('cart', { cart, formattedProducts, cartTotal })
-        } else {
-            res.status(404).send(`Error 404: Cart with ID ${cartId} not found.`)
+      for (const item of cart.items) {
+        const product = await productManager.getProductById(item.productId);
+        if (product) {
+          productsDetails.push({ product, quantity: item.quantity });
         }
-    } catch (error) {
-        res.status(500).send(`Error: ${error.message}`)
+      }
+      let formattedProducts = productsDetails.map((item) => {
+        return {
+          title: item.product.title,
+          description: item.product.description,
+          price: item.product.price,
+        };
+      });
+      let cartTotal = cart.total;
+      res.render("cart", { cart, formattedProducts, cartTotal });
+    } else {
+      res.status(404).send(`Error 404: Cart with ID ${cartId} not found.`);
     }
-})
+  } catch (error) {
+    res.status(500).send(`Error: ${error.message}`);
+  }
+});
 
 router.post("/api/carts/:cid/products/:pid", async (req, res) => {
-
-    try {
-
-        const { cid, pid } = req.params
-        const { quantity } = req.body
-
-        const cart = await cartManager.addToCart(cid, pid, quantity)
-        res.status(200).json({ status: 'success', payload: cart })
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message })
+  try {
+    const { cid, pid } = req.params;
+    const { quantity } = req.body;
+    if (!req.session.user || req.session.user.cartId !== cid) {
+      return res.status(403).send("Acceso no autorizado para este carrito");
     }
-})
+    const cart = await cartManager.addToCart(cid, pid, quantity);
+    res.status(200).json({ status: "success", payload: cart });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
 //No encontre manera de eliminar productos de mi carrito
 //Según Postman tengo conflictos con el total del carrito
 router.delete("/api/carts/:cid/products/:pid", async (req, res) => {
-    try {
-        const { cid, pid } = req.params
-
-        await cartManager.removeFromCart(cid, pid)
-
-        return res.json({ status: "success", message: "Product removed from cart successfully." })
-    } catch (error) {
-        return res.status(500).json({ status: "error", message: error.message })
+  try {
+    const { cid, pid } = req.params;
+    if (!req.session.user || req.session.user.cartId !== cid) {
+      return res.status(403).send("Acceso no autorizado para este carrito");
     }
-})
+
+    await cartManager.removeFromCart(cid, pid);
+
+    return res.json({
+      status: "success",
+      message: "Product removed from cart successfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({ status: "error", message: error.message });
+  }
+});
 
 router.put("/api/carts/:cid", async (req, res) => {
-    try {
-        const { cid } = req.params
+  try {
+    const { cid } = req.params;
 
-        if (!mongoose.Types.ObjectId.isValid(cid)) {
-            return res.status(400).json({ status: "error", message: "Invalid cart ID" })
-        }
-
-        const { products } = req.body
-
-        if (!Array.isArray(products)) {
-            return res.status(400).json({ status: "error", message: "Products should be an array" })
-        }
-
-        console.log("Cart ID:", cid)
-
-        const updatedCart = await cartManager.updateCart(cid, products)
-
-        res.json({ status: "success", message: "Cart updated successfully", cart: updatedCart })
-    } catch (error) {
-        console.error("Error updating cart:", error.message)
-        res.status(500).json({ status: "error", message: "Internal server error" })
+    if (!mongoose.Types.ObjectId.isValid(cid)) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Invalid cart ID" });
     }
-})
 
-export default router
+    const { products } = req.body;
+
+    if (!Array.isArray(products)) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Products should be an array" });
+    }
+
+    console.log("Cart ID:", cid);
+
+    const updatedCart = await cartManager.updateCart(cid, products);
+
+    res.json({
+      status: "success",
+      message: "Cart updated successfully",
+      cart: updatedCart,
+    });
+  } catch (error) {
+    console.error("Error updating cart:", error.message);
+    res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+export default router;
