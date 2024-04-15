@@ -12,6 +12,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+
+
 const mongoUrl = process.env.MONGO_URL;
 const adminEmail = process.env.ADMIN_EMAIL;
 const adminPassword = process.env.ADMIN_PASSWORD;
