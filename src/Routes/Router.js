@@ -6,6 +6,7 @@ import { productModel } from "../DAO/models/product.model.js";
 // import { userModel } from '../DAO/models/user.model.js'
 import UsersDAO from "../DAO/DB/userManager.js";
 import passport from "../passport.config.js";
+import faker from "faker";
 
 const router = express.Router();
 
@@ -424,12 +425,38 @@ router.post("/carts/:cid/purchase", async (req, res) => {
         productId: item.productId,
         quantity: item.quantity,
       })),
-      productsNotPurchased: productsNotPurchased
+      productsNotPurchased: productsNotPurchased,
     });
 
-    return res.status(200).json({ status: "success", ticket, productsNotPurchased });
+    return res
+      .status(200)
+      .json({ status: "success", ticket, productsNotPurchased });
   } catch (error) {
     return res.status(500).send(`Error: ${error.message}`);
+  }
+});
+
+//////////////////////////Mocking//////////////////////////
+
+// Endpoint para productos falsos
+app.get("/mockingproducts", (req, res) => {
+  try {
+    const numberOfProducts = 100;
+    const fakeProducts = Array.from({ length: numberOfProducts }, () => ({
+      title: faker.commerce.productName(),
+      description: faker.commerce.productDescription(),
+      price: parseFloat(faker.commerce.price()),
+      image: faker.image.imageUrl(),
+      code: faker.datatype.uuid(),
+      stock: faker.datatype.number({ min: 1, max: 100 }),
+      status: true,
+      category: faker.commerce.department(),
+      thumbnails: [faker.image.imageUrl(), faker.image.imageUrl()]
+  }));
+
+    res.status(200).json(fakeProducts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al generar productos falsos' });
   }
 });
 

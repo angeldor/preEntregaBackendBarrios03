@@ -9,10 +9,9 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "./passport.config.js";
 import dotenv from "dotenv";
+import errorHandler from "./errorHandler.js";
 
 dotenv.config();
-
-
 
 const mongoUrl = process.env.MONGO_URL;
 const adminEmail = process.env.ADMIN_EMAIL;
@@ -32,6 +31,7 @@ mongoose.connection.on("error", (err) => {
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
+app.use(errorHandler);
 
 app.use(
   session({
