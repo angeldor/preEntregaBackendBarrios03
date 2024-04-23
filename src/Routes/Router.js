@@ -7,6 +7,7 @@ import { productModel } from "../DAO/models/product.model.js";
 import UsersDAO from "../DAO/DB/userManager.js";
 import passport from "../passport.config.js";
 import faker from "faker";
+import {devLogger} from '../logger.js'
 
 const router = express.Router();
 
@@ -458,6 +459,15 @@ app.get("/mockingproducts", (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error al generar productos falsos' });
   }
+});
+
+router.get('/loggerTest', (req, res) => {
+  devLogger.debug('Debug message');
+  devLogger.info('Information message');
+  devLogger.warn('Warning message');
+  devLogger.error('Error message');
+  devLogger.fatal('Fatal message');
+  res.send('Logs generated successfully');
 });
 
 export default router;
