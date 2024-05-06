@@ -10,6 +10,7 @@ import session from "express-session";
 import passport from "./passport.config.js";
 import dotenv from "dotenv";
 import errorHandler from "./errorHandler.js";
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -73,3 +74,15 @@ app.use((req, res, next) => {
 app.engine("handlebars", handlebars.engine());
 app.set("views", __dirname + "/views");
 app.set("view engine", "handlebars");
+
+
+// Configuración del transportador SMTP para Gmail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+      user: 'freyadesarrolloweb@gmail.com',
+      pass: 'EMAIL_PASSWORD'
+  }
+});
+
+export default transporter;

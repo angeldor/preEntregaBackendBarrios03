@@ -2,12 +2,12 @@ import express from "express";
 import { ProductManager, CartManager } from "../DAO/DB/ProductManager.js";
 import mongoose from "mongoose";
 import { productModel } from "../DAO/models/product.model.js";
-// import { cartModel } from '../DAO/models/cart.model.js'
-// import { userModel } from '../DAO/models/user.model.js'
+import nodemailer from "nodemailer";
+import transporter from "../App.js";
+import crypto from "crypto";
 import UsersDAO from "../DAO/DB/userManager.js";
-import passport from "../passport.config.js";
 import faker from "faker";
-import {devLogger} from '../logger.js'
+import { devLogger } from "../logger.js";
 
 const router = express.Router();
 
@@ -452,22 +452,63 @@ app.get("/mockingproducts", (req, res) => {
       stock: faker.datatype.number({ min: 1, max: 100 }),
       status: true,
       category: faker.commerce.department(),
-      thumbnails: [faker.image.imageUrl(), faker.image.imageUrl()]
-  }));
+      thumbnails: [faker.image.imageUrl(), faker.image.imageUrl()],
+    }));
 
     res.status(200).json(fakeProducts);
   } catch (error) {
-    res.status(500).json({ message: 'Error al generar productos falsos' });
+    res.status(500).json({ message: "Error al generar productos falsos" });
   }
 });
 
-router.get('/loggerTest', (req, res) => {
-  devLogger.debug('Debug message');
-  devLogger.info('Information message');
-  devLogger.warn('Warning message');
-  devLogger.error('Error message');
-  devLogger.fatal('Fatal message');
-  res.send('Logs generated successfully');
+router.get("/loggerTest", (req, res) => {
+  devLogger.debug("Debug message");
+  devLogger.info("Information message");
+  devLogger.warn("Warning message");
+  devLogger.error("Error message");
+  devLogger.fatal("Fatal message");
+  res.send("Logs generated successfully");
+});
+
+////////////////////////// password recovery //////////////////////////
+
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+    const token = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // Expira en 1 hora
+    await user.save();
+
+    const resetLink = `http://example.com/reset-password/${token}`;
+
+    const mailOptions = {
+      from: "your@example.com",
+      to: user.email,
+      subject: "Restablecer contraseña",
+      text: `Para restablecer tu contraseña, haz clic en el siguiente enlace: ${resetLink}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res
+      .status(200)
+      .json({
+        message:
+          "Correo electrónico de restablecimiento de contraseña enviado.",
+      });
+  } catch (error) {
+    console.error(
+      "Error al enviar el correo electrónico de restablecimiento de contraseña:",
+      error
+    );
+    res.status(500).json({ message: "Error interno del servidor." });
+  }
 });
 
 export default router;
