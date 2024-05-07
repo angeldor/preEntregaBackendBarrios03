@@ -54,14 +54,6 @@ app.use(express.json());
 
 app.use("/", router);
 
-// app.use((req, res, next) => {
-//     const { user } = req.session
-//     const path = req.path
-//     if (!user && path !== '/login') {
-//         return res.redirect('/login')
-//     }
-//     next()
-// })
 
 app.use((req, res, next) => {
   if (!req.isAuthenticated() && req.originalUrl !== "/login") {

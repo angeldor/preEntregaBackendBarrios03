@@ -8,6 +8,7 @@ import crypto from "crypto";
 import UsersDAO from "../DAO/DB/userManager.js";
 import faker from "faker";
 import { devLogger } from "../logger.js";
+import { registerUser } from "../DAO/DB/userManager.js";
 
 const router = express.Router();
 
@@ -66,7 +67,7 @@ router.get("/profile", async (req, res) => {
 });
 
 // sesiones
-
+router.post('/register', registerUser);
 router.post("/singup", async (req, res) => {
   let first_name = req.body.first_name;
   let last_name = req.body.last_name;
@@ -485,7 +486,7 @@ router.post("/forgot-password", async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // Expira en 1 hora
     await user.save();
 
-    const resetLink = `http://example.com/reset-password/${token}`;
+    const resetLink = `http://localhost:8080/reset-password/${token}`;
 
     const mailOptions = {
       from: "your@example.com",
@@ -510,5 +511,37 @@ router.post("/forgot-password", async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor." });
   }
 });
+
+async function getCurrentPassword(userId) {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+      throw new Error("User not found");
+  }
+  return user.password;
+}
+
+router.post('/change-password', async (req, res) =>{
+  const { userId, currentPassword, newPassword } = req.body;
+
+  try{
+    const currentPasswordFromDB = await getCurrentPassword(userId);
+
+    if (currentPassword === currentPasswordFromDB){
+      return res.status(400).send("La nueva contraseña debe ser diferente a la contraseña actual.");
+    }
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        throw new Error("Usuario no encontrado");
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).send("Contraseña actualizada correctamente.");
+  }catch(error){
+    console.error("Error al cambiar la contraseña:", error.message);
+    res.status(500).send("Ocurrió un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde.");
+  }
+})
 
 export default router;

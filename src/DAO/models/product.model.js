@@ -15,7 +15,15 @@ const productSchema = new mongoose.Schema({
     stock: Number,
     status: { type: Boolean, default: true },
     category: String,
-    thumbnails: [String]
+    thumbnails: [String],
+    owner: {
+        type: String,
+        default: 'admin',
+        required: function() {
+            // Solo requerido para usuarios premium
+            return this.isUserPremium;
+        }
+    }
 })
 
 productSchema.plugin(mongoosePaginate)

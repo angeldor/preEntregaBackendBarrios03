@@ -38,4 +38,35 @@ class UsersDAO {
   }
 }
 
-export {UsersDAO, UserManager};
+async function registerUser(req, res) {
+  const { first_name, last_name, age, email, password, role } = req.body;
+
+  try {
+    // Verificar si el correo electrónico ya está en uso
+    const existingUser = await UserRepository.getUserByEmail(email);
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: "El correo electrónico ya está en uso." });
+    }
+
+    // Crear el nuevo usuario con el rol especificado
+    const newUser = await UserRepository.insertUser(
+      first_name,
+      last_name,
+      age,
+      email,
+      password,
+      role
+    );
+
+    res
+      .status(201)
+      .json({ message: "Usuario registrado exitosamente.", user: newUser });
+  } catch (error) {
+    console.error("Error al registrar usuario:", error);
+    res.status(500).json({ message: "Error interno del servidor." });
+  }
+}
+
+export { UsersDAO, UserManager, registerUser };
