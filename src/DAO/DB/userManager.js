@@ -36,6 +36,25 @@ class UsersDAO {
       { first_name: 1, last_name: 1, age: 1, email: 1 }
     ).lean();
   }
+  static async changeUserRole(userId, newRole) {
+    try {
+      // Buscar el usuario por su ID
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error(`User with id ${userId} not found.`);
+      }
+
+      // Cambiar el rol del usuario
+      user.role = newRole;
+
+      // Guardar el usuario actualizado en la base de datos
+      await user.save();
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 async function registerUser(req, res) {

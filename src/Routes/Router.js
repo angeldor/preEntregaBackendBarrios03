@@ -9,6 +9,7 @@ import UsersDAO from "../DAO/DB/userManager.js";
 import faker from "faker";
 import { devLogger } from "../logger.js";
 import { registerUser } from "../DAO/DB/userManager.js";
+import { UsersController } from "../controllers.js"
 
 const router = express.Router();
 
@@ -67,7 +68,11 @@ router.get("/profile", async (req, res) => {
 });
 
 // sesiones
-router.post('/register', registerUser);
+
+router.put('/users/:userId/role', UsersController.changeUserRole);
+
+router.post("/register", registerUser);
+
 router.post("/singup", async (req, res) => {
   let first_name = req.body.first_name;
   let last_name = req.body.last_name;
@@ -497,12 +502,9 @@ router.post("/forgot-password", async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    res
-      .status(200)
-      .json({
-        message:
-          "Correo electrónico de restablecimiento de contraseña enviado.",
-      });
+    res.status(200).json({
+      message: "Correo electrónico de restablecimiento de contraseña enviado.",
+    });
   } catch (error) {
     console.error(
       "Error al enviar el correo electrónico de restablecimiento de contraseña:",
@@ -515,33 +517,39 @@ router.post("/forgot-password", async (req, res) => {
 async function getCurrentPassword(userId) {
   const user = await UserModel.findById(userId);
   if (!user) {
-      throw new Error("User not found");
+    throw new Error("User not found");
   }
   return user.password;
 }
 
-router.post('/change-password', async (req, res) =>{
+router.post("/change-password", async (req, res) => {
   const { userId, currentPassword, newPassword } = req.body;
 
-  try{
+  try {
     const currentPasswordFromDB = await getCurrentPassword(userId);
 
-    if (currentPassword === currentPasswordFromDB){
-      return res.status(400).send("La nueva contraseña debe ser diferente a la contraseña actual.");
+    if (currentPassword === currentPasswordFromDB) {
+      return res
+        .status(400)
+        .send("La nueva contraseña debe ser diferente a la contraseña actual.");
     }
     const user = await UserModel.findById(userId);
     if (!user) {
-        throw new Error("Usuario no encontrado");
+      throw new Error("Usuario no encontrado");
     }
 
     user.password = newPassword;
     await user.save();
 
     res.status(200).send("Contraseña actualizada correctamente.");
-  }catch(error){
+  } catch (error) {
     console.error("Error al cambiar la contraseña:", error.message);
-    res.status(500).send("Ocurrió un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde.");
+    res
+      .status(500)
+      .send(
+        "Ocurrió un error al cambiar la contraseña. Por favor, inténtalo de nuevo más tarde."
+      );
   }
-})
+});
 
 export default router;
