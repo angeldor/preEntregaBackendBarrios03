@@ -72,7 +72,7 @@ router.get("/profile", async (req, res) => {
 router.put('/users/:userId/role', UsersController.changeUserRole);
 
 router.post("/register", registerUser);
-
+4
 router.post("/singup", async (req, res) => {
   let first_name = req.body.first_name;
   let last_name = req.body.last_name;
