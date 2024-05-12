@@ -6,9 +6,9 @@ class UserManager {
     const user = await UserModel.findById(userId);
     if (!user) {
       throw new Error("User not found");
-      const { username, email, roles } = user;
-      return new UserDTO(username, email, roles);
     }
+    const { username, email, roles } = user;
+    return new UserDTO(username, email, roles);
   }
 }
 class UsersDAO {
